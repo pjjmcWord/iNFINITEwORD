@@ -1,4 +1,5 @@
 import { fbm, hash } from './noise';
+import { getWorldSeed } from './seed';
 
 export enum TileType {
   WATER = 'water',
@@ -67,11 +68,12 @@ export function getTile(x: number, y: number): Tile {
     return { type: TileType.GRASS, elevation: 0.5 };
   }
 
+  const seed = getWorldSeed();
   const scale = 0.04;
-  const elevation = fbm(x * scale, y * scale, 5, 42);
-  const moisture = fbm(x * scale * 0.7, y * scale * 0.7, 4, 137);
-  const temperature = fbm(x * scale * 0.5, y * scale * 0.5, 3, 271);
-  const resourceNoise = fbm(x * scale * 1.2, y * scale * 1.2, 3, 555);
+  const elevation = fbm(x * scale, y * scale, 5, seed);
+  const moisture = fbm(x * scale * 0.7, y * scale * 0.7, 4, seed + 137);
+  const temperature = fbm(x * scale * 0.5, y * scale * 0.5, 3, seed + 271);
+  const resourceNoise = fbm(x * scale * 1.2, y * scale * 1.2, 3, seed + 555);
 
   let type: TileType;
 
@@ -117,7 +119,7 @@ export function getTile(x: number, y: number): Tile {
     type = resourceNoise > 0.88 ? TileType.SILVER_VEIN : TileType.SNOW;
   }
 
-  if ((type === TileType.GRASS || type === TileType.FOREST) && hash(x * 3, y * 5, 888) > 0.97) {
+  if ((type === TileType.GRASS || type === TileType.FOREST) && hash(x * 3, y * 5, seed + 888) > 0.97) {
     type = TileType.RUINS;
   }
 
@@ -125,14 +127,46 @@ export function getTile(x: number, y: number): Tile {
 }
 
 function generateVillageColor(x: number, y: number): string {
-  const r = Math.floor(hash(x * 11, y * 17, 123) * 155 + 100);
-  const g = Math.floor(hash(x * 13, y * 19, 456) * 155 + 100);
-  const b = Math.floor(hash(x * 17, y * 23, 789) * 155 + 100);
+  const seed = getWorldSeed();
+  const r = Math.floor(hash(x * 11, y * 17, seed + 123) * 155 + 100);
+  const g = Math.floor(hash(x * 13, y * 19, seed + 456) * 155 + 100);
+  const b = Math.floor(hash(x * 17, y * 23, seed + 789) * 155 + 100);
   return `rgb(${r}, ${g}, ${b})`;
 }
 
 export function calculateMaxBorderRadius(population: number): number {
   return 1 + Math.floor(population / 5);
+}
+
+function hasNearbyVillage(x: number, y: number, minDistance: number): boolean {
+  const seed = getWorldSeed();
+  
+  for (let dy = -minDistance; dy <= minDistance; dy++) {
+    for (let dx = -minDistance; dx <= minDistance; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      
+      const dist = Math.abs(dx) + Math.abs(dy);
+      if (dist > minDistance) continue;
+      
+      const checkX = x + dx;
+      const checkY = y + dy;
+      
+      const checkChance = hash(checkX * 7, checkY * 13, seed + 999);
+      if (checkChance < 0.025) {
+        const tile = getTile(checkX, checkY);
+        const villageTiles = [
+          TileType.GRASS, TileType.FOREST, TileType.COAST, 
+          TileType.WHEAT_FIELD, TileType.DENSE_FOREST
+        ];
+        
+        if (villageTiles.includes(tile.type)) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
 export function getVillageAt(x: number, y: number): Village | null {
@@ -163,7 +197,13 @@ export function getVillageAt(x: number, y: number): Village | null {
     return null;
   }
 
-  const villageChance = hash(x * 7, y * 13, 999);
+  if (hasNearbyVillage(x, y, 4)) {
+    villageCache.set(key, null);
+    return null;
+  }
+
+  const seed = getWorldSeed();
+  const villageChance = hash(x * 7, y * 13, seed + 999);
   if (villageChance >= 0.025) {
     villageCache.set(key, null);
     return null;
@@ -177,8 +217,8 @@ export function getVillageAt(x: number, y: number): Village | null {
     return null;
   }
 
-  const nameIdx = Math.floor(hash(x, y, 555) * VILLAGE_NAMES.length);
-  const pop = Math.floor(hash(x, y, 777) * 20) + 5;
+  const nameIdx = Math.floor(hash(x, y, seed + 555) * VILLAGE_NAMES.length);
+  const pop = Math.floor(hash(x, y, seed + 777) * 20) + 5;
   const color = generateVillageColor(x, y);
   const maxBorder = calculateMaxBorderRadius(pop);
 

@@ -88,6 +88,35 @@ const VillageInfoPanel: React.FC<VillageInfoPanelProps> = ({ village, onClose })
             )}
           </div>
 
+          {/* Friendship */}
+          {!village.isPlayer && (
+            <div className="bg-gray-700/50 rounded-lg p-3">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold text-gray-300">🤝 Amistad</span>
+                <span className="text-lg font-bold text-white">{village.friendship}</span>
+              </div>
+              <div className="w-full bg-gray-600 rounded-full h-2 relative">
+                <div 
+                  className="h-2 rounded-full transition-all absolute left-1/2"
+                  style={{ 
+                    width: `${Math.abs(village.friendship) / 2}%`,
+                    backgroundColor: village.friendship >= 0 ? '#10b981' : '#ef4444',
+                    transform: village.friendship >= 0 ? 'translateX(0)' : 'translateX(-100%)',
+                  }}
+                />
+                <div className="absolute left-1/2 top-0 w-0.5 h-2 bg-gray-400" />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {village.friendship >= 50 ? '✅ Puedes crear rutas comerciales (+10% plata)' : 
+                 village.friendship >= 0 ? '🟡 Relaciones neutrales' : 
+                 '🔴 Relaciones hostiles'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Rango: -100 a +100
+              </p>
+            </div>
+          )}
+
           {/* Color */}
           <div className="bg-gray-700/50 rounded-lg p-3">
             <div className="flex justify-between items-center">

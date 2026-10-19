@@ -318,7 +318,7 @@ function App() {
     }
   }, [gameState.titles, addEvent]);
 
-  // Handle border expansion
+  // Handle border expansion (casilla a casilla)
   const handleBorderExpansion = useCallback(() => {
     setGameState(prev => {
       const cost = getBorderExpansionCost(prev.borderRadius);
@@ -329,6 +329,7 @@ function App() {
         newResources[key as keyof Resources] -= value || 0;
       }
 
+      // Expandir una casilla a la vez
       const newBorderRadius = prev.borderRadius + 1;
 
       return {
@@ -338,7 +339,7 @@ function App() {
       };
     });
 
-    setNotification(`🛡️ ¡Frontera expandida!`);
+    setNotification(`🛡️ ¡Frontera expandida una casilla!`);
     addEvent(`Frontera expandida a radio ${gameState.borderRadius + 1}`, 'success');
     setTimeout(() => setNotification(null), 2000);
   }, [gameState.borderRadius, addEvent]);
