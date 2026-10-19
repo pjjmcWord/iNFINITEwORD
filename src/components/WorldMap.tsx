@@ -26,6 +26,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
       village: Village | null; 
       elevation: number;
       inCapitalBorder: boolean;
+      isBorderEdge: boolean;
       villageOwner: Village | null;
     }[] = [];
     
@@ -38,6 +39,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
         
         const distToCapital = Math.abs(tx - capitalX) + Math.abs(ty - capitalY);
         const inCapitalBorder = distToCapital <= borderRadius;
+        const isBorderEdge = distToCapital === borderRadius;
         
         // Find which village owns this tile
         let villageOwner: Village | null = null;
@@ -58,7 +60,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
         
         result.push({ 
           x: tx, y: ty, type: tile.type, village, elevation: tile.elevation, 
-          inCapitalBorder, villageOwner 
+          inCapitalBorder, isBorderEdge, villageOwner 
         });
       }
     }
@@ -83,7 +85,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
           maxHeight: '100%',
         }}
       >
-        {tiles.map(({ x, y, type, village, elevation, inCapitalBorder, villageOwner }) => {
+        {tiles.map(({ x, y, type, village, elevation, inCapitalBorder, isBorderEdge, villageOwner }) => {
           const screenX = (x - cameraX + viewRadius) * TILE_SIZE;
           const screenY = (y - cameraY + viewRadius) * TILE_SIZE;
           const isCapital = x === capitalX && y === capitalY;
@@ -116,15 +118,19 @@ const WorldMap: React.FC<WorldMapProps> = ({
                   ? '0 0 0 2px #a855f7, 0 0 12px rgba(168, 85, 247, 0.5), inset 0 0 8px rgba(168, 85, 247, 0.3)'
                   : village && !village.isPlayer
                   ? `0 0 0 2px ${village.color}, 0 0 15px ${village.color}80`
+                  : isBorderEdge && inCapitalBorder
+                  ? '0 0 0 3px rgba(245, 158, 11, 0.8), inset 0 0 10px rgba(245, 158, 11, 0.3)'
                   : inCapitalBorder && !isCapital
-                  ? 'inset 0 0 0 2px rgba(59, 130, 246, 0.4)'
+                  ? 'inset 0 0 8px rgba(245, 158, 11, 0.2)'
                   : villageOwner && showVillageBorders && !villageOwner.isPlayer
                   ? `inset 0 0 0 1px ${villageOwner.color}60`
                   : undefined,
-                zIndex: isCapital ? 30 : village ? 20 : 1,
+                zIndex: isCapital ? 30 : village ? 20 : isBorderEdge ? 15 : 1,
                 borderRadius: isCapital ? '4px' : '0',
-                border: inCapitalBorder && !isCapital && !village 
-                  ? '1px dashed rgba(59, 130, 246, 0.3)' 
+                border: isBorderEdge && inCapitalBorder
+                  ? '2px solid rgba(245, 158, 11, 0.7)' 
+                  : inCapitalBorder && !isCapital && !village 
+                  ? '1px solid rgba(245, 158, 11, 0.3)' 
                   : '1px solid rgba(0,0,0,0.15)',
                 opacity: showVillageBorders && villageOwner && !villageOwner.isPlayer ? 0.75 : 1,
               }}
@@ -135,6 +141,19 @@ const WorldMap: React.FC<WorldMapProps> = ({
               <div style={{ filter: `brightness(${brightness})`, width: '100%', height: '100%' }}>
                 <PixelTile type={type} size={TILE_SIZE} variant={(x * 7 + y * 13) % 4} />
               </div>
+              
+              {/* Capital border overlay */}
+              {inCapitalBorder && !isCapital && (
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: isBorderEdge 
+                      ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%)'
+                      : 'rgba(245, 158, 11, 0.1)',
+                    zIndex: 5,
+                  }}
+                />
+              )}
               
               {/* Village overlay */}
               {village && !isCapital && (

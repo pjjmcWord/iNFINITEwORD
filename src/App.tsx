@@ -632,14 +632,6 @@ function App() {
             🗺️ {showVillageBorders ? 'Ocultar' : 'Mostrar'} Fronteras
           </button>
 
-          {/* Controls hint */}
-          <div className="absolute bottom-3 left-3 bg-gray-900/80 rounded-lg px-3 py-2 text-xs text-gray-400 border border-gray-700/50 backdrop-blur-sm z-10">
-            <p>🎮 WASD/Flechas = Mover cámara</p>
-            <p>⇧ + WASD = Mover rápido (x3)</p>
-            <p>🖱️ Clic = Inspeccionar casilla</p>
-            <p>🏠 H = Volver a la capital</p>
-          </div>
-
           {/* Starvation warning */}
           {gameState.starving && (
             <div className="absolute top-14 right-3 bg-red-900/80 rounded-lg px-3 py-1.5 border border-red-500/50 backdrop-blur-sm animate-pulse">
