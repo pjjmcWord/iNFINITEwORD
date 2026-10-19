@@ -166,6 +166,45 @@ export function calculateMaxBorderRadius(population: number): number {
 }
 
 /**
+ * Check if there's a village within minimum distance
+ */
+function hasNearbyVillage(x: number, y: number, minDistance: number): boolean {
+  const worldSeed = getWorldSeed();
+  
+  // Check all positions within minDistance
+  for (let dy = -minDistance; dy <= minDistance; dy++) {
+    for (let dx = -minDistance; dx <= minDistance; dx++) {
+      // Skip the position itself
+      if (dx === 0 && dy === 0) continue;
+      
+      const dist = Math.abs(dx) + Math.abs(dy);
+      if (dist > minDistance) continue;
+      
+      const checkX = x + dx;
+      const checkY = y + dy;
+      
+      // Check if this position would be a village
+      const checkChance = hash(checkX * 7, checkY * 13, worldSeed + 999);
+      if (checkChance < 0.025) {
+        // This position is a village candidate, check if it's valid
+        const tile = getTile(checkX, checkY);
+        const villageTiles = [
+          TileType.GRASS, TileType.FOREST, TileType.COAST, 
+          TileType.WHEAT_FIELD, TileType.DENSE_FOREST
+        ];
+        
+        if (villageTiles.includes(tile.type)) {
+          // There's a valid village nearby
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Get village at position, with territory
  */
 export function getVillageAt(x: number, y: number): Village | null {
@@ -189,6 +228,19 @@ export function getVillageAt(x: number, y: number): Village | null {
     };
     villageCache.set(key, village);
     return village;
+  }
+
+  // Minimum distance from capital (0,0)
+  const distToCapital = Math.abs(x) + Math.abs(y);
+  if (distToCapital < 5) {
+    villageCache.set(key, null);
+    return null;
+  }
+
+  // Check if there's another village too close (minimum 5 tiles apart)
+  if (hasNearbyVillage(x, y, 4)) {
+    villageCache.set(key, null);
+    return null;
   }
 
   // Check if this position is a village center
