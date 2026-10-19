@@ -56,6 +56,9 @@ const ResourceBar: React.FC<ResourceBarProps> = ({
           <ResourceItem emoji="🧱" name="Arcilla" value={resources.clay} production={production.clay} />
           <ResourceItem emoji="💎" name="Plata" value={resources.silver} production={production.silver} />
           <ResourceItem emoji="🪵" name="Madera" value={resources.wood} production={production.wood} />
+          <ResourceItem emoji="🔬" name="Ciencia" value={resources.science} production={production.science} />
+          <ResourceItem emoji="🎭" name="Cultura" value={resources.culture} production={production.culture} />
+          <ResourceItem emoji="🙏" name="Fe" value={resources.faith} production={production.faith} />
         </div>
 
         {/* Tick counter */}
@@ -84,7 +87,7 @@ const ResourceItem: React.FC<ResourceItemProps> = ({ emoji, name, value, product
   const netProduction = consumption ? production - consumption : production;
   
   return (
-    <div className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[95px] ${
+    <div className={`flex items-center gap-1 rounded-lg px-2 py-1.5 min-w-[90px] ${
       isStarving && name === 'Trigo' ? 'bg-red-900/50 border border-red-500/30' : 'bg-gray-700/50'
     }`}>
       <span className="text-base">{emoji}</span>
