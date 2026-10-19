@@ -38,7 +38,7 @@ function App() {
   const [gameState, setGameState] = useState<GameState>(() => {
     const initialTitles = ALL_TITLES.map((t: Title) => ({ ...t, unlocked: false, active: false }));
     return {
-      resources: { wheat: 100, stone: 10, clay: 10, silver: 5, wood: 10 },
+      resources: { wheat: 150, stone: 20, clay: 20, silver: 10, wood: 20 },
       baseProduction: { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 },
       effectiveProduction: { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 },
       capitalProduction: { ...CAPITAL_BASE_PRODUCTION },
@@ -115,18 +115,22 @@ function App() {
 
         // Sort by difficulty (easier first) and pick randomly from top candidates
         candidates.sort((a, b) => b.difficulty - a.difficulty);
-        const topCandidates = candidates.filter(c => c.difficulty >= candidates[0].difficulty * 0.7);
+        const topCandidates = candidates.filter(c => c.difficulty >= candidates[0].difficulty * 0.6);
         const selected = topCandidates[Math.floor(Math.random() * topCandidates.length)];
 
         // Update capital border radius
         const newBorderRadius = Math.max(capital.borderRadius, Math.abs(selected.x - CAPITAL_X) + Math.abs(selected.y - CAPITAL_Y));
+
+        if (newBorderRadius > prev.borderRadius) {
+          addEvent(`🛡️ ¡Frontera expandida! Radio: ${newBorderRadius}`, 'success');
+        }
 
         return {
           ...prev,
           borderRadius: newBorderRadius,
         };
       });
-    }, 5000); // Check every 5 seconds
+    }, 3000); // Check every 3 seconds for faster expansion
 
     return () => clearInterval(expansionInterval);
   }, []);
@@ -183,10 +187,10 @@ function App() {
         const titlePopBonus = getTitlePopulationBonus(prev.titles, prev.activeTitleIds);
         const newMaxPop = 20 + (houseUpgrade?.level || 0) * 5 + titlePopBonus;
 
-        if (isStarving && prev.tick % 5 === 0 && prev.tick > 0) {
+        if (isStarving && prev.tick % 8 === 0 && prev.tick > 0) {
           newPop = Math.max(1, prev.population - 1);
-        } else if (!isStarving && prev.resources.wheat > 10 && prev.population < newMaxPop) {
-          if (prev.tick % 8 === 0 && prev.tick > 0) {
+        } else if (!isStarving && prev.resources.wheat > 5 && prev.population < newMaxPop) {
+          if (prev.tick % 5 === 0 && prev.tick > 0) {
             newPop = Math.min(prev.population + 1, newMaxPop);
           }
         }

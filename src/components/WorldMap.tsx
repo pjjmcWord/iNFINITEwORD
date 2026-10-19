@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { getTile, getTileColor, getVillageAt, TileType, TILE_INFO, isTileInVillageBorder, Village } from '../utils/worldGen';
+import PixelTile from './PixelTile';
 
 interface WorldMapProps {
   cameraX: number;
@@ -96,7 +97,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
           return (
             <div
               key={`${x}-${y}`}
-              className={`absolute flex items-center justify-center cursor-pointer transition-all duration-150 ${
+              className={`absolute cursor-pointer transition-all duration-150 ${
                 isAdjacent && type !== TileType.WATER ? 'hover:brightness-125 hover:z-20' : ''
               }`}
               style={{
@@ -104,8 +105,6 @@ const WorldMap: React.FC<WorldMapProps> = ({
                 top: screenY,
                 width: TILE_SIZE,
                 height: TILE_SIZE,
-                backgroundColor: bgColor,
-                filter: `brightness(${brightness})`,
                 boxShadow: isCapital 
                   ? '0 0 0 3px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(245, 158, 11, 0.3)' 
                   : isSelected
@@ -116,68 +115,54 @@ const WorldMap: React.FC<WorldMapProps> = ({
                   ? 'inset 0 0 0 2px rgba(59, 130, 246, 0.4)'
                   : villageOwner && showVillageBorders && !villageOwner.isPlayer
                   ? `inset 0 0 0 1px ${villageOwner.color}60`
-                  : isAdjacent && type !== TileType.WATER
-                  ? 'inset 0 0 0 1px rgba(255,255,255,0.1)'
                   : undefined,
                 zIndex: isCapital ? 30 : village ? 20 : 1,
                 borderRadius: isCapital ? '4px' : '0',
                 border: inCapitalBorder && !isCapital && !village 
                   ? '1px dashed rgba(59, 130, 246, 0.3)' 
-                  : '1px solid rgba(0,0,0,0.1)',
-                opacity: showVillageBorders && villageOwner && !villageOwner.isPlayer ? 0.7 : 1,
+                  : '1px solid rgba(0,0,0,0.15)',
+                opacity: showVillageBorders && villageOwner && !villageOwner.isPlayer ? 0.75 : 1,
               }}
               onClick={() => onTileClick(x, y)}
               title={`(${x}, ${y}) - ${TILE_INFO[type].name}${village ? ` - ${village.name}` : ''}${villageOwner && !village ? ` [${villageOwner.name}]` : ''}`}
             >
-              {isCapital && (
-                <span className="text-xl drop-shadow-lg" style={{ zIndex: 40, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>🏰</span>
-              )}
+              {/* Pixel Art Tile */}
+              <div style={{ filter: `brightness(${brightness})`, width: '100%', height: '100%' }}>
+                <PixelTile type={type} size={TILE_SIZE} variant={(x * 7 + y * 13) % 4} />
+              </div>
+              
+              {/* Village overlay */}
               {village && !isCapital && (
-                <div className="flex flex-col items-center">
-                  <span className="text-base drop-shadow-md">🏘️</span>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 10 }}>
+                  <div 
+                    className="w-6 h-6 rounded-sm flex items-center justify-center text-[10px] font-bold text-white shadow-lg"
+                    style={{ 
+                      backgroundColor: village.color,
+                      border: '2px solid rgba(255,255,255,0.5)',
+                      boxShadow: `0 0 8px ${village.color}80`,
+                    }}
+                  >
+                    {village.population}
+                  </div>
                 </div>
               )}
-              {!isCapital && !village && type === TileType.FOREST && (
-                <span className="text-xs opacity-70 drop-shadow-sm">🌲</span>
-              )}
-              {!isCapital && !village && type === TileType.MOUNTAIN && (
-                <span className="text-xs opacity-70 drop-shadow-sm">🪨</span>
-              )}
-              {!isCapital && !village && type === TileType.WATER && (
-                <span className="text-xs opacity-40">〰️</span>
-              )}
-              {!isCapital && !village && type === TileType.DESERT && (
-                <span className="text-xs opacity-50">🌵</span>
-              )}
-              {!isCapital && !village && type === TileType.SNOW && (
-                <span className="text-xs opacity-50">🏔️</span>
-              )}
-              {!isCapital && !village && type === TileType.COAST && (
-                <span className="text-xs opacity-40">🐚</span>
-              )}
-              {!isCapital && !village && type === TileType.WHEAT_FIELD && (
-                <span className="text-xs opacity-80 drop-shadow-sm">🌾</span>
-              )}
-              {!isCapital && !village && type === TileType.STONE_DEPOSIT && (
-                <span className="text-xs opacity-80 drop-shadow-sm">⛏️</span>
-              )}
-              {!isCapital && !village && type === TileType.CLAY_PIT && (
-                <span className="text-xs opacity-80 drop-shadow-sm">🧱</span>
-              )}
-              {!isCapital && !village && type === TileType.SILVER_VEIN && (
-                <span className="text-xs opacity-80 drop-shadow-sm">💎</span>
-              )}
-              {!isCapital && !village && type === TileType.DENSE_FOREST && (
-                <span className="text-sm opacity-80 drop-shadow-sm">🌳</span>
-              )}
-              {!isCapital && !village && type === TileType.RUINS && (
-                <span className="text-xs opacity-80 drop-shadow-sm">🏛️</span>
-              )}
-              {!isCapital && !village && type === TileType.OASIS && (
-                <span className="text-xs opacity-80 drop-shadow-sm">🌴</span>
-              )}
-              {!isCapital && !village && type === TileType.GRASS && (
-                <span className="text-xs opacity-40">·</span>
+              
+              {/* Capital marker */}
+              {isCapital && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 40 }}>
+                  <div className="relative">
+                    <div 
+                      className="w-8 h-8 rounded flex items-center justify-center shadow-xl"
+                      style={{ 
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                        border: '2px solid #fbbf24',
+                        boxShadow: '0 0 15px rgba(245, 158, 11, 0.6)',
+                      }}
+                    >
+                      <span className="text-white font-bold text-xs">★</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           );

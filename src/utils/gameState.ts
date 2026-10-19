@@ -51,11 +51,11 @@ export interface GameState {
 
 // Capital base production: 1 of each resource per tick
 export const CAPITAL_BASE_PRODUCTION: ResourceProduction = {
-  wheat: 1,
-  stone: 1,
-  clay: 1,
-  silver: 1,
-  wood: 1,
+  wheat: 2,
+  stone: 1.5,
+  clay: 1.5,
+  silver: 0.8,
+  wood: 1.5,
 };
 
 export const INITIAL_UPGRADES: Upgrade[] = [
@@ -63,40 +63,40 @@ export const INITIAL_UPGRADES: Upgrade[] = [
     id: 'farm',
     name: '🌾 Granja',
     description: 'Produce trigo. Necesita 2 hab.',
-    cost: { wheat: 10, wood: 5 },
+    cost: { wheat: 8, wood: 3 },
     effect: '+2 trigo/tick',
     level: 0,
     maxLevel: 50,
-    multiplier: 1.4,
+    multiplier: 1.3,
     category: 'production',
   },
   {
     id: 'quarry',
     name: '⛏️ Cantera',
     description: 'Produce piedra. Necesita 2 hab.',
-    cost: { stone: 10, wood: 5 },
+    cost: { stone: 8, wood: 3 },
     effect: '+2 piedra/tick',
     level: 0,
     maxLevel: 50,
-    multiplier: 1.4,
+    multiplier: 1.3,
     category: 'production',
   },
   {
     id: 'brickworks',
     name: '🧱 Ladrillera',
     description: 'Produce arcilla. Necesita 2 hab.',
-    cost: { clay: 10, wood: 5 },
+    cost: { clay: 8, wood: 3 },
     effect: '+2 arcilla/tick',
     level: 0,
     maxLevel: 50,
-    multiplier: 1.4,
+    multiplier: 1.3,
     category: 'production',
   },
   {
     id: 'mine',
     name: '💎 Mina de Plata',
     description: 'Produce plata. Necesita 2 hab.',
-    cost: { silver: 10, stone: 15 },
+    cost: { silver: 8, stone: 10 },
     effect: '+2 plata/tick',
     level: 0,
     maxLevel: 50,
@@ -118,44 +118,44 @@ export const INITIAL_UPGRADES: Upgrade[] = [
     id: 'house',
     name: '🏠 Casas',
     description: 'Aumenta población máxima (+5)',
-    cost: { wood: 15, stone: 10, clay: 5 },
+    cost: { wood: 10, stone: 8, clay: 5 },
     effect: '+5 población máxima',
     level: 0,
     maxLevel: 30,
-    multiplier: 1.6,
+    multiplier: 1.4,
     category: 'infrastructure',
   },
   {
     id: 'market',
     name: '🏪 Mercado',
     description: 'Todos los recursos +0.5/tick',
-    cost: { silver: 20, wood: 15, stone: 15 },
+    cost: { silver: 15, wood: 10, stone: 10 },
     effect: '+0.5 todos los recursos',
     level: 0,
     maxLevel: 20,
-    multiplier: 2.0,
+    multiplier: 1.6,
     category: 'production',
   },
   {
     id: 'expedition',
     name: '🗺️ Expedición',
     description: 'Radio de visión +1',
-    cost: { wood: 20, silver: 10 },
+    cost: { wood: 15, silver: 8 },
     effect: 'Visión del mapa +1',
     level: 0,
     maxLevel: 10,
-    multiplier: 2.5,
+    multiplier: 1.8,
     category: 'expansion',
   },
   {
     id: 'border',
     name: '🛡️ Frontera',
     description: 'Expande el territorio del pueblo',
-    cost: { stone: 25, wood: 20, silver: 5 },
+    cost: { stone: 15, wood: 15, silver: 3 },
     effect: '+1 radio de frontera',
     level: 0,
     maxLevel: 15,
-    multiplier: 2.0,
+    multiplier: 1.5,
     category: 'expansion',
   },
 ];
@@ -238,11 +238,11 @@ export function calculateEffectiveProduction(
 }
 
 /**
- * Calculate wheat consumption per tick (each population consumes 0.1 wheat/tick)
- * Tick is 1 second, so 0.1 wheat per second per population
+ * Calculate wheat consumption per tick (each population consumes 0.05 wheat/tick)
+ * Tick is 1 second, so 0.05 wheat per second per population
  */
 export function calculateWheatConsumption(population: number): number {
-  return population * 0.1;
+  return population * 0.05;
 }
 
 /**

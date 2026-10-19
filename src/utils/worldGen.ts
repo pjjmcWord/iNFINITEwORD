@@ -255,13 +255,13 @@ export function getTileColor(type: TileType): string {
 export function getTileNaturalProduction(type: TileType): { wheat: number; stone: number; clay: number; silver: number; wood: number } {
   const prod = { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 };
   switch (type) {
-    case TileType.WHEAT_FIELD: prod.wheat = 0.5; break;
-    case TileType.STONE_DEPOSIT: prod.stone = 0.5; break;
-    case TileType.CLAY_PIT: prod.clay = 0.5; break;
-    case TileType.SILVER_VEIN: prod.silver = 0.3; break;
-    case TileType.DENSE_FOREST: prod.wood = 0.5; break;
-    case TileType.FOREST: prod.wood = 0.1; break;
-    case TileType.OASIS: prod.wheat = 0.2; break;
+    case TileType.WHEAT_FIELD: prod.wheat = 0.8; break;
+    case TileType.STONE_DEPOSIT: prod.stone = 0.6; break;
+    case TileType.CLAY_PIT: prod.clay = 0.6; break;
+    case TileType.SILVER_VEIN: prod.silver = 0.4; break;
+    case TileType.DENSE_FOREST: prod.wood = 0.7; break;
+    case TileType.FOREST: prod.wood = 0.2; break;
+    case TileType.OASIS: prod.wheat = 0.3; break;
   }
   return prod;
 }

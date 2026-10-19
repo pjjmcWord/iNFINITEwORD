@@ -33,6 +33,35 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+@keyframes waterFlow {
+  0%, 100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 /* Prevent text selection on game elements */
 .no-select {
   user-select: none;
@@ -43,4 +72,11 @@
 .tile-hover:hover {
   filter: brightness(1.2);
   transform: scale(1.05);
+}
+
+/* Pixel art rendering */
+.pixel-art {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
