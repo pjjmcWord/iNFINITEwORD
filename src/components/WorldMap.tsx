@@ -8,13 +8,14 @@ interface WorldMapProps {
   capitalX: number;
   capitalY: number;
   borderRadius: number;
+  selectedTile: { x: number; y: number } | null;
   onTileClick: (x: number, y: number) => void;
 }
 
 const TILE_SIZE = 44;
 
 const WorldMap: React.FC<WorldMapProps> = ({ 
-  cameraX, cameraY, viewRadius, capitalX, capitalY, borderRadius, onTileClick 
+  cameraX, cameraY, viewRadius, capitalX, capitalY, borderRadius, selectedTile, onTileClick 
 }) => {
   const tiles = useMemo(() => {
     const result: { 
@@ -58,6 +59,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
           const screenX = (x - cameraX + viewRadius) * TILE_SIZE;
           const screenY = (y - cameraY + viewRadius) * TILE_SIZE;
           const isCapital = x === capitalX && y === capitalY;
+          const isSelected = selectedTile && x === selectedTile.x && y === selectedTile.y;
           const isAdjacent = Math.abs(x - cameraX) <= 2 && Math.abs(y - cameraY) <= 2 && !isCapital;
           
           const brightness = 0.85 + elevation * 0.3;
@@ -77,6 +79,8 @@ const WorldMap: React.FC<WorldMapProps> = ({
                 filter: `brightness(${brightness})`,
                 boxShadow: isCapital 
                   ? '0 0 0 3px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(245, 158, 11, 0.3)' 
+                  : isSelected
+                  ? '0 0 0 2px #a855f7, 0 0 12px rgba(168, 85, 247, 0.5), inset 0 0 8px rgba(168, 85, 247, 0.3)'
                   : village && !village.isPlayer
                   ? 'inset 0 0 8px rgba(245, 158, 11, 0.4)'
                   : inCapitalBorder && !isCapital
@@ -118,6 +122,30 @@ const WorldMap: React.FC<WorldMapProps> = ({
               )}
               {!isCapital && !village && type === TileType.COAST && (
                 <span className="text-xs opacity-40">🐚</span>
+              )}
+              {!isCapital && !village && type === TileType.WHEAT_FIELD && (
+                <span className="text-xs opacity-80 drop-shadow-sm">🌾</span>
+              )}
+              {!isCapital && !village && type === TileType.STONE_DEPOSIT && (
+                <span className="text-xs opacity-80 drop-shadow-sm">⛏️</span>
+              )}
+              {!isCapital && !village && type === TileType.CLAY_PIT && (
+                <span className="text-xs opacity-80 drop-shadow-sm">🧱</span>
+              )}
+              {!isCapital && !village && type === TileType.SILVER_VEIN && (
+                <span className="text-xs opacity-80 drop-shadow-sm">💎</span>
+              )}
+              {!isCapital && !village && type === TileType.DENSE_FOREST && (
+                <span className="text-sm opacity-80 drop-shadow-sm">🌳</span>
+              )}
+              {!isCapital && !village && type === TileType.RUINS && (
+                <span className="text-xs opacity-80 drop-shadow-sm">🏛️</span>
+              )}
+              {!isCapital && !village && type === TileType.OASIS && (
+                <span className="text-xs opacity-80 drop-shadow-sm">🌴</span>
+              )}
+              {!isCapital && !village && type === TileType.GRASS && (
+                <span className="text-xs opacity-40">·</span>
               )}
             </div>
           );

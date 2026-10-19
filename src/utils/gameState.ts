@@ -30,6 +30,9 @@ export interface GameState {
   resources: Resources;
   baseProduction: ResourceProduction;
   effectiveProduction: ResourceProduction;
+  capitalProduction: ResourceProduction;
+  naturalProduction: ResourceProduction;
+  titleProduction: ResourceProduction;
   population: number;
   maxPopulation: number;
   upgrades: Upgrade[];
@@ -42,7 +45,18 @@ export interface GameState {
   totalBuildings: number;
   borderRadius: number;
   starving: boolean;
+  titles: import('./titles').Title[];
+  activeTitleIds: string[];
 }
+
+// Capital base production: 1 of each resource per tick
+export const CAPITAL_BASE_PRODUCTION: ResourceProduction = {
+  wheat: 1,
+  stone: 1,
+  clay: 1,
+  silver: 1,
+  wood: 1,
+};
 
 export const INITIAL_UPGRADES: Upgrade[] = [
   {
