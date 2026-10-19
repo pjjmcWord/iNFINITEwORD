@@ -1,6 +1,9 @@
+import { getWorldSeed } from './seed';
+
 // Simple hash-based noise for procedural world generation
-export function hash(x: number, y: number, seed: number = 42): number {
-  let h = seed;
+export function hash(x: number, y: number, seed?: number): number {
+  const baseSeed = seed !== undefined ? seed : getWorldSeed();
+  let h = baseSeed;
   h = ((h << 5) - h + x) | 0;
   h = ((h << 5) - h + y) | 0;
   h = (h ^ (h >>> 16)) | 0;
@@ -11,7 +14,7 @@ export function hash(x: number, y: number, seed: number = 42): number {
   return (h & 0x7fffffff) / 0x7fffffff;
 }
 
-export function smoothNoise(x: number, y: number, seed: number = 42): number {
+export function smoothNoise(x: number, y: number, seed?: number): number {
   const ix = Math.floor(x);
   const iy = Math.floor(y);
   const fx = x - ix;
@@ -32,14 +35,15 @@ export function smoothNoise(x: number, y: number, seed: number = 42): number {
   return nx0 * (1 - sy) + nx1 * sy;
 }
 
-export function fbm(x: number, y: number, octaves: number = 4, seed: number = 42): number {
+export function fbm(x: number, y: number, octaves: number = 4, seed?: number): number {
+  const baseSeed = seed !== undefined ? seed : getWorldSeed();
   let value = 0;
   let amplitude = 1;
   let frequency = 1;
   let maxValue = 0;
 
   for (let i = 0; i < octaves; i++) {
-    value += smoothNoise(x * frequency, y * frequency, seed + i * 100) * amplitude;
+    value += smoothNoise(x * frequency, y * frequency, baseSeed + i * 100) * amplitude;
     maxValue += amplitude;
     amplitude *= 0.5;
     frequency *= 2;

@@ -1,4 +1,5 @@
 import { fbm, hash } from './noise';
+import { getWorldSeed } from './seed';
 
 export enum TileType {
   WATER = 'water',
@@ -75,10 +76,11 @@ const villageCache = new Map<string, Village | null>();
 
 export function getTile(x: number, y: number): Tile {
   const scale = 0.04;
-  const elevation = fbm(x * scale, y * scale, 5, 42);
-  const moisture = fbm(x * scale * 0.7, y * scale * 0.7, 4, 137);
-  const temperature = fbm(x * scale * 0.5, y * scale * 0.5, 3, 271);
-  const resourceNoise = fbm(x * scale * 1.2, y * scale * 1.2, 3, 555);
+  const worldSeed = getWorldSeed();
+  const elevation = fbm(x * scale, y * scale, 5, worldSeed);
+  const moisture = fbm(x * scale * 0.7, y * scale * 0.7, 4, worldSeed + 137);
+  const temperature = fbm(x * scale * 0.5, y * scale * 0.5, 3, worldSeed + 271);
+  const resourceNoise = fbm(x * scale * 1.2, y * scale * 1.2, 3, worldSeed + 555);
 
   let type: TileType;
 
@@ -132,7 +134,7 @@ export function getTile(x: number, y: number): Tile {
     }
   }
 
-  if ((type === TileType.GRASS || type === TileType.FOREST) && hash(x * 3, y * 5, 888) > 0.97) {
+  if ((type === TileType.GRASS || type === TileType.FOREST) && hash(x * 3, y * 5, worldSeed + 888) > 0.97) {
     type = TileType.RUINS;
   }
 
@@ -143,9 +145,10 @@ export function getTile(x: number, y: number): Tile {
  * Generate a random RGB color for a village
  */
 function generateVillageColor(x: number, y: number): string {
-  const r = Math.floor(hash(x * 11, y * 17, 123) * 155 + 100);
-  const g = Math.floor(hash(x * 13, y * 19, 456) * 155 + 100);
-  const b = Math.floor(hash(x * 17, y * 23, 789) * 155 + 100);
+  const worldSeed = getWorldSeed();
+  const r = Math.floor(hash(x * 11, y * 17, worldSeed + 123) * 155 + 100);
+  const g = Math.floor(hash(x * 13, y * 19, worldSeed + 456) * 155 + 100);
+  const b = Math.floor(hash(x * 17, y * 23, worldSeed + 789) * 155 + 100);
   return `rgb(${r}, ${g}, ${b})`;
 }
 
@@ -184,7 +187,8 @@ export function getVillageAt(x: number, y: number): Village | null {
   }
 
   // Check if this position is a village center
-  const villageChance = hash(x * 7, y * 13, 999);
+  const worldSeed = getWorldSeed();
+  const villageChance = hash(x * 7, y * 13, worldSeed + 999);
   if (villageChance >= 0.025) {
     villageCache.set(key, null);
     return null;
@@ -201,8 +205,8 @@ export function getVillageAt(x: number, y: number): Village | null {
     return null;
   }
 
-  const nameIdx = Math.floor(hash(x, y, 555) * VILLAGE_NAMES.length);
-  const pop = Math.floor(hash(x, y, 777) * 20) + 5;
+  const nameIdx = Math.floor(hash(x, y, worldSeed + 555) * VILLAGE_NAMES.length);
+  const pop = Math.floor(hash(x, y, worldSeed + 777) * 20) + 5;
   const color = generateVillageColor(x, y);
   const maxBorder = calculateMaxBorderRadius(pop);
 
@@ -303,4 +307,11 @@ export function getExpansionCandidates(village: Village): { x: number; y: number
   }
 
   return candidates;
+}
+
+/**
+ * Clear the village cache (called when world seed changes)
+ */
+export function clearVillageCache(): void {
+  villageCache.clear();
 }

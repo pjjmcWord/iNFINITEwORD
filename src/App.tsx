@@ -20,8 +20,9 @@ import {
   calculateWheatConsumption,
   getBorderRadius,
 } from './utils/gameState';
-import { getTile, getVillageAt, TileType, getTileNaturalProduction, TILE_INFO, Village, calculateMaxBorderRadius, getExpansionCandidates } from './utils/worldGen';
+import { getTile, getVillageAt, TileType, getTileNaturalProduction, TILE_INFO, Village, calculateMaxBorderRadius, getExpansionCandidates, clearVillageCache } from './utils/worldGen';
 import { Title, ALL_TITLES, canAffordTitle } from './utils/titles';
+import { generateNewSeed } from './utils/seed';
 import {
   getTitleProductionBonus,
   getTitleConsumptionReduction,
@@ -310,6 +311,10 @@ function App() {
 
   // Handle game reset
   const handleResetGame = useCallback(() => {
+    // Generate new world seed and clear village cache
+    const newSeed = generateNewSeed();
+    clearVillageCache();
+    
     const initialTitles = ALL_TITLES.map((t) => ({ ...t, unlocked: false, active: false }));
     setGameState({
       resources: { wheat: 150, stone: 20, clay: 20, silver: 10, wood: 20 },
@@ -337,10 +342,11 @@ function App() {
     setSelectedTile(null);
     setSelectedVillage(null);
     setEvents([
+      { id: eventIdRef.current++, message: `¡Nuevo mundo generado! Seed: ${newSeed}`, type: 'discovery', tick: 0 },
       { id: eventIdRef.current++, message: '¡Partida reiniciada! Buena suerte.', type: 'info', tick: 0 },
     ]);
-    setNotification('🔄 Partida reiniciada');
-    setTimeout(() => setNotification(null), 2000);
+    setNotification(`🔄 ¡Nuevo mundo! Seed: ${newSeed}`);
+    setTimeout(() => setNotification(null), 3000);
   }, []);
 
   // Camera movement with keyboard ONLY
