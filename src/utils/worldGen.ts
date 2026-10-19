@@ -75,6 +75,11 @@ const VILLAGE_NAMES = [
 const villageCache = new Map<string, Village | null>();
 
 export function getTile(x: number, y: number): Tile {
+  // Capital position (0,0) is always grass
+  if (x === 0 && y === 0) {
+    return { type: TileType.GRASS, elevation: 0.5 };
+  }
+
   const scale = 0.04;
   const worldSeed = getWorldSeed();
   const elevation = fbm(x * scale, y * scale, 5, worldSeed);
