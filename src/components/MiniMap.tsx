@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getTile, getTileColor, getVillageAt, isTileInVillageBorder } from '../utils/worldGen';
+import { getTile, getVillageAt, isTileInVillageBorder, TILE_INFO } from '../utils/worldGen';
 
 interface MiniMapProps {
   playerX: number;
@@ -44,7 +44,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ playerX, playerY, capitalX, capitalY,
         result.push({
           x: dx + range,
           y: dy + range,
-          color: villageColor || (isBorder && !village ? '#2563eb30' : getTileColor(tile.type)),
+          color: villageColor || (isBorder && !village ? '#2563eb30' : TILE_INFO[tile.type].color),
           isVillage: !!village,
           isBorder,
           villageColor,

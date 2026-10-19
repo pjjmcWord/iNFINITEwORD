@@ -1,27 +1,25 @@
 import React from 'react';
-import { Title, canAffordTitle } from '../utils/titles';
-import { Resources } from '../utils/gameState';
+import { Title, Resources, canAfford } from '../utils/gameState';
 
 interface TitlePanelProps {
   titles: Title[];
   resources: Resources;
-  activeTitleIds: string[];
-  onPurchase: (id: string) => void;
+  activeTitleId: string | null;
+  onAction: (titleId: string) => void;
   onClose: () => void;
 }
 
-const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleIds, onPurchase, onClose }) => {
+const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleId, onAction, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gray-800 border-2 border-purple-500/50 rounded-xl shadow-2xl shadow-purple-500/20 w-full max-w-3xl max-h-[85vh] flex flex-col">
-        {/* Header */}
         <div className="p-4 bg-gradient-to-r from-purple-900/50 to-gray-800 border-b border-purple-500/30 flex justify-between items-center rounded-t-xl">
           <div>
             <h2 className="text-xl font-bold text-purple-300 flex items-center gap-2">
-              🏆 Títulos y Buffs
+              🏆 Títulos
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Desbloquea títulos para obtener bonificaciones permanentes
+              Solo puedes tener un título activo a la vez
             </p>
           </div>
           <button
@@ -32,22 +30,11 @@ const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleI
           </button>
         </div>
 
-        {/* Active titles summary */}
-        {activeTitleIds.length > 0 && (
-          <div className="px-4 py-2 bg-purple-900/20 border-b border-purple-500/20">
-            <p className="text-xs text-purple-300">
-              <span className="font-bold">Títulos activos: </span>
-              {titles.filter(t => activeTitleIds.includes(t.id)).map(t => `${t.emoji} ${t.name}`).join(' • ')}
-            </p>
-          </div>
-        )}
-
-        {/* Titles grid */}
         <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {titles.map((title) => {
-              const affordable = canAffordTitle(resources, title.cost);
-              const isActive = activeTitleIds.includes(title.id);
+              const affordable = canAfford(resources, title.cost);
+              const isActive = activeTitleId === title.id;
 
               return (
                 <div
@@ -55,6 +42,8 @@ const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleI
                   className={`rounded-lg p-3 border transition-all ${
                     isActive
                       ? 'bg-purple-900/30 border-purple-500/60 shadow-lg shadow-purple-500/10'
+                      : title.unlocked
+                      ? 'bg-gray-700/80 border-purple-500/30 hover:border-purple-400'
                       : affordable
                       ? 'bg-gray-700/80 border-purple-500/30 hover:border-purple-400'
                       : 'bg-gray-700/40 border-gray-600/50'
@@ -73,7 +62,6 @@ const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleI
                       </div>
                       <p className="text-[10px] text-gray-400 italic">{title.description}</p>
                       
-                      {/* Buffs */}
                       <div className="mt-2 space-y-0.5">
                         <p className="text-[10px] text-purple-300 font-bold">Buffs:</p>
                         {title.buffs.map((buff, idx) => (
@@ -83,8 +71,7 @@ const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleI
                         ))}
                       </div>
 
-                      {/* Cost */}
-                      {!isActive && (
+                      {!title.unlocked && (
                         <div className="mt-2">
                           <p className="text-[10px] text-gray-400 mb-1">Coste:</p>
                           <div className="flex flex-wrap gap-1">
@@ -101,28 +88,24 @@ const TitlePanel: React.FC<TitlePanelProps> = ({ titles, resources, activeTitleI
                               </span>
                             ))}
                           </div>
-                          {title.requirement && (
-                            <p className="text-[9px] text-amber-400/70 mt-1">
-                              📋 {title.requirement}
-                            </p>
-                          )}
                         </div>
                       )}
 
-                      {/* Purchase button */}
-                      {!isActive && (
-                        <button
-                          onClick={() => onPurchase(title.id)}
-                          disabled={!affordable}
-                          className={`mt-2 w-full px-2 py-1.5 rounded text-xs font-bold transition-all ${
-                            affordable
-                              ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/30 active:scale-95'
-                              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          }`}
-                        >
-                          {affordable ? '🏆 Desbloquear Título' : 'Recursos insuficientes'}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => onAction(title.id)}
+                        disabled={!title.unlocked && !affordable}
+                        className={`mt-2 w-full px-2 py-1.5 rounded text-xs font-bold transition-all ${
+                          isActive
+                            ? 'bg-red-600 hover:bg-red-500 text-white'
+                            : title.unlocked
+                            ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                            : affordable
+                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/30 active:scale-95'
+                            : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {isActive ? '🔴 Desactivar' : title.unlocked ? '✅ Activar' : '🏆 Desbloquear'}
+                      </button>
                     </div>
                   </div>
                 </div>

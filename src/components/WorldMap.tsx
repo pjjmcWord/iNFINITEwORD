@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getTile, getTileColor, getVillageAt, TileType, TILE_INFO, isTileInVillageBorder, Village } from '../utils/worldGen';
+import { getTile, getVillageAt, TileType, TILE_INFO, isTileInVillageBorder, Village } from '../utils/worldGen';
 import PixelTile from './PixelTile';
 
 interface WorldMapProps {
@@ -95,9 +95,8 @@ const WorldMap: React.FC<WorldMapProps> = ({
           const brightness = 0.85 + elevation * 0.3;
           
           // Determine background color
-          let bgColor = getTileColor(type);
+          let bgColor = TILE_INFO[type].color;
           if (showVillageBorders && villageOwner && !villageOwner.isPlayer) {
-            // Blend village color with terrain
             bgColor = villageOwner.color;
           }
 
@@ -139,7 +138,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
             >
               {/* Pixel Art Tile */}
               <div style={{ filter: `brightness(${brightness})`, width: '100%', height: '100%' }}>
-                <PixelTile type={type} size={TILE_SIZE} variant={(x * 7 + y * 13) % 4} />
+                <PixelTile type={type} size={TILE_SIZE} />
               </div>
               
               {/* Capital border overlay */}
