@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { getTile, getTileColor, getVillageAt, TileType } from '../utils/worldGen';
+import { getTile, getTileColor, getVillageAt, TileType, TILE_INFO, isTileInVillageBorder, Village } from '../utils/worldGen';
 
 interface WorldMapProps {
   cameraX: number;
@@ -10,20 +10,24 @@ interface WorldMapProps {
   borderRadius: number;
   selectedTile: { x: number; y: number } | null;
   onTileClick: (x: number, y: number) => void;
+  showVillageBorders: boolean;
 }
 
 const TILE_SIZE = 44;
 
 const WorldMap: React.FC<WorldMapProps> = ({ 
-  cameraX, cameraY, viewRadius, capitalX, capitalY, borderRadius, selectedTile, onTileClick 
+  cameraX, cameraY, viewRadius, capitalX, capitalY, borderRadius, 
+  selectedTile, onTileClick, showVillageBorders 
 }) => {
   const tiles = useMemo(() => {
     const result: { 
       x: number; y: number; type: TileType; 
-      village: ReturnType<typeof getVillageAt>; 
+      village: Village | null; 
       elevation: number;
       inCapitalBorder: boolean;
+      villageOwner: Village | null;
     }[] = [];
+    
     for (let dy = -viewRadius; dy <= viewRadius; dy++) {
       for (let dx = -viewRadius; dx <= viewRadius; dx++) {
         const tx = cameraX + dx;
@@ -31,11 +35,30 @@ const WorldMap: React.FC<WorldMapProps> = ({
         const tile = getTile(tx, ty);
         const village = getVillageAt(tx, ty);
         
-        // Check if inside capital border (Manhattan distance)
         const distToCapital = Math.abs(tx - capitalX) + Math.abs(ty - capitalY);
         const inCapitalBorder = distToCapital <= borderRadius;
         
-        result.push({ x: tx, y: ty, type: tile.type, village, elevation: tile.elevation, inCapitalBorder });
+        // Find which village owns this tile
+        let villageOwner: Village | null = null;
+        if (village) {
+          villageOwner = village;
+        } else {
+          // Check nearby villages
+          const searchRadius = 15;
+          for (let sy = -searchRadius; sy <= searchRadius && !villageOwner; sy++) {
+            for (let sx = -searchRadius; sx <= searchRadius && !villageOwner; sx++) {
+              const nearbyVillage = getVillageAt(tx + sx, ty + sy);
+              if (nearbyVillage && isTileInVillageBorder(tx, ty, nearbyVillage)) {
+                villageOwner = nearbyVillage;
+              }
+            }
+          }
+        }
+        
+        result.push({ 
+          x: tx, y: ty, type: tile.type, village, elevation: tile.elevation, 
+          inCapitalBorder, villageOwner 
+        });
       }
     }
     return result;
@@ -45,7 +68,6 @@ const WorldMap: React.FC<WorldMapProps> = ({
 
   return (
     <div className="relative overflow-hidden w-full h-full flex items-center justify-center bg-gray-950">
-      {/* Background grid effect */}
       <div className="absolute inset-0 opacity-5" style={{
         backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
         backgroundSize: '20px 20px',
@@ -55,7 +77,7 @@ const WorldMap: React.FC<WorldMapProps> = ({
         className="relative rounded-lg overflow-hidden shadow-2xl shadow-black/50"
         style={{ width: mapSize, height: mapSize }}
       >
-        {tiles.map(({ x, y, type, village, elevation, inCapitalBorder }) => {
+        {tiles.map(({ x, y, type, village, elevation, inCapitalBorder, villageOwner }) => {
           const screenX = (x - cameraX + viewRadius) * TILE_SIZE;
           const screenY = (y - cameraY + viewRadius) * TILE_SIZE;
           const isCapital = x === capitalX && y === capitalY;
@@ -63,28 +85,37 @@ const WorldMap: React.FC<WorldMapProps> = ({
           const isAdjacent = Math.abs(x - cameraX) <= 2 && Math.abs(y - cameraY) <= 2 && !isCapital;
           
           const brightness = 0.85 + elevation * 0.3;
+          
+          // Determine background color
+          let bgColor = getTileColor(type);
+          if (showVillageBorders && villageOwner && !villageOwner.isPlayer) {
+            // Blend village color with terrain
+            bgColor = villageOwner.color;
+          }
 
           return (
             <div
               key={`${x}-${y}`}
               className={`absolute flex items-center justify-center cursor-pointer transition-all duration-150 ${
                 isAdjacent && type !== TileType.WATER ? 'hover:brightness-125 hover:z-20' : ''
-              } ${type === TileType.WATER ? '' : ''}`}
+              }`}
               style={{
                 left: screenX,
                 top: screenY,
                 width: TILE_SIZE,
                 height: TILE_SIZE,
-                backgroundColor: getTileColor(type),
+                backgroundColor: bgColor,
                 filter: `brightness(${brightness})`,
                 boxShadow: isCapital 
                   ? '0 0 0 3px #f59e0b, 0 0 20px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(245, 158, 11, 0.3)' 
                   : isSelected
                   ? '0 0 0 2px #a855f7, 0 0 12px rgba(168, 85, 247, 0.5), inset 0 0 8px rgba(168, 85, 247, 0.3)'
                   : village && !village.isPlayer
-                  ? 'inset 0 0 8px rgba(245, 158, 11, 0.4)'
+                  ? `0 0 0 2px ${village.color}, 0 0 15px ${village.color}80`
                   : inCapitalBorder && !isCapital
                   ? 'inset 0 0 0 2px rgba(59, 130, 246, 0.4)'
+                  : villageOwner && showVillageBorders && !villageOwner.isPlayer
+                  ? `inset 0 0 0 1px ${villageOwner.color}60`
                   : isAdjacent && type !== TileType.WATER
                   ? 'inset 0 0 0 1px rgba(255,255,255,0.1)'
                   : undefined,
@@ -93,9 +124,10 @@ const WorldMap: React.FC<WorldMapProps> = ({
                 border: inCapitalBorder && !isCapital && !village 
                   ? '1px dashed rgba(59, 130, 246, 0.3)' 
                   : '1px solid rgba(0,0,0,0.1)',
+                opacity: showVillageBorders && villageOwner && !villageOwner.isPlayer ? 0.7 : 1,
               }}
               onClick={() => onTileClick(x, y)}
-              title={`(${x}, ${y}) - ${type}${village ? ` - ${village.name}` : ''}${inCapitalBorder ? ' [Tu frontera]' : ''}`}
+              title={`(${x}, ${y}) - ${TILE_INFO[type].name}${village ? ` - ${village.name}` : ''}${villageOwner && !village ? ` [${villageOwner.name}]` : ''}`}
             >
               {isCapital && (
                 <span className="text-xl drop-shadow-lg" style={{ zIndex: 40, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>🏰</span>

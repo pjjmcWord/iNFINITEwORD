@@ -5,6 +5,7 @@ import ResourceBar from './components/ResourceBar';
 import MiniMap from './components/MiniMap';
 import EventLog, { GameEvent } from './components/EventLog';
 import TitlePanel from './components/TitlePanel';
+import VillageInfoPanel from './components/VillageInfoPanel';
 import {
   GameState,
   Resources,
@@ -18,7 +19,7 @@ import {
   calculateWheatConsumption,
   getBorderRadius,
 } from './utils/gameState';
-import { getTile, getVillageAt, TileType, getTileNaturalProduction, TILE_INFO } from './utils/worldGen';
+import { getTile, getVillageAt, TileType, getTileNaturalProduction, TILE_INFO, Village, calculateMaxBorderRadius, getExpansionCandidates } from './utils/worldGen';
 import { Title, ALL_TITLES, canAffordTitle } from './utils/titles';
 import {
   getTitleProductionBonus,
@@ -64,6 +65,8 @@ function App() {
   const [selectedTile, setSelectedTile] = useState<{ x: number; y: number } | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [showTitlePanel, setShowTitlePanel] = useState(false);
+  const [showVillageBorders, setShowVillageBorders] = useState(false);
+  const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
   const [events, setEvents] = useState<GameEvent[]>([
     { id: 0, message: '¡Bienvenido! Tu capital produce 1 de cada recurso.', type: 'info', tick: 0 },
     { id: 1, message: 'Construye edificios y asigna población para producir más.', type: 'info', tick: 0 },
@@ -94,6 +97,38 @@ function App() {
       }
     }
     return natural;
+  }, []);
+
+  // Village expansion logic
+  useEffect(() => {
+    const expansionInterval = setInterval(() => {
+      // Expand player's capital
+      setGameState(prev => {
+        const capital = getVillageAt(CAPITAL_X, CAPITAL_Y);
+        if (!capital) return prev;
+
+        const maxBorder = calculateMaxBorderRadius(prev.population);
+        if (capital.borderRadius >= maxBorder) return prev;
+
+        const candidates = getExpansionCandidates(capital);
+        if (candidates.length === 0) return prev;
+
+        // Sort by difficulty (easier first) and pick randomly from top candidates
+        candidates.sort((a, b) => b.difficulty - a.difficulty);
+        const topCandidates = candidates.filter(c => c.difficulty >= candidates[0].difficulty * 0.7);
+        const selected = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+
+        // Update capital border radius
+        const newBorderRadius = Math.max(capital.borderRadius, Math.abs(selected.x - CAPITAL_X) + Math.abs(selected.y - CAPITAL_Y));
+
+        return {
+          ...prev,
+          borderRadius: newBorderRadius,
+        };
+      });
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(expansionInterval);
   }, []);
 
   // Game tick
@@ -297,12 +332,9 @@ function App() {
     const village = getVillageAt(x, y);
     setSelectedTile({ x, y });
 
-    if (village && !village.isPlayer) {
-      setGameState(prev => ({
-        ...prev,
-        villagesExplored: Math.max(prev.villagesExplored, prev.villagesExplored),
-      }));
-      addEvent(`Vista: ${village.name} en (${x}, ${y})`, 'info');
+    if (village) {
+      setSelectedVillage(village);
+      addEvent(`Inspeccionando: ${village.name}`, 'info');
     }
   }, [addEvent]);
 
@@ -512,6 +544,7 @@ function App() {
             borderRadius={gameState.borderRadius}
             selectedTile={selectedTile}
             onTileClick={handleTileClick}
+            showVillageBorders={showVillageBorders}
           />
           
           {/* Notification */}
@@ -527,6 +560,18 @@ function App() {
             className="absolute top-3 left-3 bg-purple-900/80 hover:bg-purple-800/90 rounded-lg px-3 py-1.5 border border-purple-500/30 backdrop-blur-sm transition-all text-sm font-bold text-purple-200 flex items-center gap-1.5"
           >
             🏆 Títulos {activeTitles.length > 0 && <span className="bg-purple-500 text-white text-[10px] px-1.5 rounded-full">{activeTitles.length}</span>}
+          </button>
+
+          {/* Village Borders Toggle */}
+          <button
+            onClick={() => setShowVillageBorders(!showVillageBorders)}
+            className={`absolute top-3 left-36 rounded-lg px-3 py-1.5 border backdrop-blur-sm transition-all text-sm font-bold flex items-center gap-1.5 ${
+              showVillageBorders 
+                ? 'bg-blue-600/80 hover:bg-blue-500/90 border-blue-400/50 text-blue-100' 
+                : 'bg-gray-700/80 hover:bg-gray-600/90 border-gray-500/30 text-gray-300'
+            }`}
+          >
+            🗺️ Fronteras
           </button>
 
           {/* Controls hint */}
@@ -566,6 +611,14 @@ function App() {
           activeTitleIds={gameState.activeTitleIds}
           onPurchase={handleTitlePurchase}
           onClose={() => setShowTitlePanel(false)}
+        />
+      )}
+
+      {/* Village Info Panel */}
+      {selectedVillage && (
+        <VillageInfoPanel
+          village={selectedVillage}
+          onClose={() => setSelectedVillage(null)}
         />
       )}
     </div>
