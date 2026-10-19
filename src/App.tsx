@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import WorldMap from './components/WorldMap';
 import UpgradePanel from './components/UpgradePanel';
 import ResourceBar from './components/ResourceBar';
-import MiniMap from './components/MiniMap';
+import TerritoryMap from './components/TerritoryMap';
 import EventLog, { GameEvent } from './components/EventLog';
 import TitlePanel from './components/TitlePanel';
 import VillageInfoPanel from './components/VillageInfoPanel';
@@ -405,21 +405,23 @@ function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-900 text-white overflow-hidden select-none">
       {/* Resource Bar */}
-      <ResourceBar
-        resources={gameState.resources}
-        production={gameState.effectiveProduction}
-        population={gameState.population}
-        maxPopulation={gameState.maxPopulation}
-        tick={gameState.tick}
-        efficiency={gameState.efficiency}
-        wheatConsumption={gameState.wheatConsumption}
-        starving={gameState.starving}
-      />
+      <div className="z-30 relative">
+        <ResourceBar
+          resources={gameState.resources}
+          production={gameState.effectiveProduction}
+          population={gameState.population}
+          maxPopulation={gameState.maxPopulation}
+          tick={gameState.tick}
+          efficiency={gameState.efficiency}
+          wheatConsumption={gameState.wheatConsumption}
+          starving={gameState.starving}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Left Panel */}
-        <div className="w-64 bg-gray-800/80 border-r border-gray-700 flex flex-col p-3 gap-2 overflow-y-auto scrollbar-thin">
+        <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col p-3 gap-2 overflow-y-auto scrollbar-thin z-20 relative">
           {/* Active Titles */}
           {activeTitles.length > 0 && (
             <div className="bg-gradient-to-br from-purple-900/30 to-gray-800/50 rounded-lg p-3 border border-purple-500/30">
@@ -568,20 +570,20 @@ function App() {
           {/* Event Log */}
           <EventLog events={events} />
 
-          {/* MiniMap */}
+          {/* Territory Map */}
           <div className="mt-auto">
-            <MiniMap 
-              playerX={gameState.cameraX} 
-              playerY={gameState.cameraY} 
+            <TerritoryMap 
+              cameraX={gameState.cameraX} 
+              cameraY={gameState.cameraY} 
               capitalX={CAPITAL_X}
               capitalY={CAPITAL_Y}
-              borderRadius={gameState.borderRadius}
+              capitalBorderRadius={gameState.borderRadius}
             />
           </div>
         </div>
 
         {/* Center - World Map */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative z-0 overflow-hidden">
           <WorldMap
             cameraX={gameState.cameraX}
             cameraY={gameState.cameraY}
@@ -604,33 +606,33 @@ function App() {
           {/* Title Panel Toggle */}
           <button
             onClick={() => setShowTitlePanel(!showTitlePanel)}
-            className="absolute top-3 left-3 bg-purple-900/80 hover:bg-purple-800/90 rounded-lg px-3 py-1.5 border border-purple-500/30 backdrop-blur-sm transition-all text-sm font-bold text-purple-200 flex items-center gap-1.5"
+            className="absolute top-3 left-3 bg-purple-900/80 hover:bg-purple-800/90 rounded-lg px-3 py-1.5 border border-purple-500/30 backdrop-blur-sm transition-all text-sm font-bold text-purple-200 flex items-center gap-1.5 z-10"
           >
             🏆 Títulos {activeTitles.length > 0 && <span className="bg-purple-500 text-white text-[10px] px-1.5 rounded-full">{activeTitles.length}</span>}
-          </button>
-
-          {/* Village Borders Toggle */}
-          <button
-            onClick={() => setShowVillageBorders(!showVillageBorders)}
-            className={`absolute top-3 left-36 rounded-lg px-3 py-1.5 border backdrop-blur-sm transition-all text-sm font-bold flex items-center gap-1.5 ${
-              showVillageBorders 
-                ? 'bg-blue-600/80 hover:bg-blue-500/90 border-blue-400/50 text-blue-100' 
-                : 'bg-gray-700/80 hover:bg-gray-600/90 border-gray-500/30 text-gray-300'
-            }`}
-          >
-            🗺️ Fronteras
           </button>
 
           {/* Options Button */}
           <button
             onClick={() => setShowOptionsPanel(true)}
-            className="absolute top-3 right-3 bg-gray-700/80 hover:bg-gray-600/90 rounded-lg px-3 py-1.5 border border-gray-500/30 backdrop-blur-sm transition-all text-sm font-bold text-gray-300 flex items-center gap-1.5"
+            className="absolute top-3 right-3 bg-gray-700/80 hover:bg-gray-600/90 rounded-lg px-3 py-1.5 border border-gray-500/30 backdrop-blur-sm transition-all text-sm font-bold text-gray-300 flex items-center gap-1.5 z-10"
           >
             ⚙️ Opciones
           </button>
 
+          {/* Village Borders Toggle - Centered at bottom */}
+          <button
+            onClick={() => setShowVillageBorders(!showVillageBorders)}
+            className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 rounded-lg px-4 py-2 border backdrop-blur-sm transition-all text-sm font-bold flex items-center gap-2 z-10 ${
+              showVillageBorders 
+                ? 'bg-blue-600/90 hover:bg-blue-500 border-blue-400/50 text-blue-100 shadow-lg shadow-blue-500/30' 
+                : 'bg-gray-700/90 hover:bg-gray-600 border-gray-500/30 text-gray-300'
+            }`}
+          >
+            🗺️ {showVillageBorders ? 'Ocultar' : 'Mostrar'} Fronteras
+          </button>
+
           {/* Controls hint */}
-          <div className="absolute bottom-3 left-3 bg-gray-900/80 rounded-lg px-3 py-2 text-xs text-gray-400 border border-gray-700/50 backdrop-blur-sm">
+          <div className="absolute bottom-3 left-3 bg-gray-900/80 rounded-lg px-3 py-2 text-xs text-gray-400 border border-gray-700/50 backdrop-blur-sm z-10">
             <p>🎮 WASD/Flechas = Mover cámara</p>
             <p>⇧ + WASD = Mover rápido (x3)</p>
             <p>🖱️ Clic = Inspeccionar casilla</p>
@@ -646,7 +648,7 @@ function App() {
         </div>
 
         {/* Right Panel - Upgrades */}
-        <div className="w-72">
+        <div className="w-72 z-20 relative">
           <UpgradePanel
             upgrades={gameState.upgrades}
             resources={gameState.resources}

@@ -76,7 +76,12 @@ const WorldMap: React.FC<WorldMapProps> = ({
       
       <div
         className="relative rounded-lg overflow-hidden shadow-2xl shadow-black/50"
-        style={{ width: mapSize, height: mapSize }}
+        style={{ 
+          width: mapSize, 
+          height: mapSize,
+          maxWidth: '100%',
+          maxHeight: '100%',
+        }}
       >
         {tiles.map(({ x, y, type, village, elevation, inCapitalBorder, villageOwner }) => {
           const screenX = (x - cameraX + viewRadius) * TILE_SIZE;
