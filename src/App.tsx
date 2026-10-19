@@ -6,6 +6,7 @@ import MiniMap from './components/MiniMap';
 import EventLog, { GameEvent } from './components/EventLog';
 import TitlePanel from './components/TitlePanel';
 import VillageInfoPanel from './components/VillageInfoPanel';
+import OptionsPanel from './components/OptionsPanel';
 import {
   GameState,
   Resources,
@@ -67,6 +68,7 @@ function App() {
   const [showTitlePanel, setShowTitlePanel] = useState(false);
   const [showVillageBorders, setShowVillageBorders] = useState(false);
   const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
+  const [showOptionsPanel, setShowOptionsPanel] = useState(false);
   const [events, setEvents] = useState<GameEvent[]>([
     { id: 0, message: '¡Bienvenido! Tu capital produce 1 de cada recurso.', type: 'info', tick: 0 },
     { id: 1, message: 'Construye edificios y asigna población para producir más.', type: 'info', tick: 0 },
@@ -305,6 +307,41 @@ function App() {
       setTimeout(() => setNotification(null), 3000);
     }
   }, [gameState.titles, addEvent]);
+
+  // Handle game reset
+  const handleResetGame = useCallback(() => {
+    const initialTitles = ALL_TITLES.map((t) => ({ ...t, unlocked: false, active: false }));
+    setGameState({
+      resources: { wheat: 150, stone: 20, clay: 20, silver: 10, wood: 20 },
+      baseProduction: { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 },
+      effectiveProduction: { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 },
+      capitalProduction: { ...CAPITAL_BASE_PRODUCTION },
+      naturalProduction: { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 },
+      titleProduction: { wheat: 0, stone: 0, clay: 0, silver: 0, wood: 0 },
+      population: 10,
+      maxPopulation: 20,
+      upgrades: INITIAL_UPGRADES.map(u => ({ ...u })),
+      cameraX: CAPITAL_X,
+      cameraY: CAPITAL_Y,
+      tick: 0,
+      villagesExplored: 1,
+      efficiency: 1,
+      wheatConsumption: 0.5,
+      totalBuildings: 0,
+      borderRadius: 3,
+      starving: false,
+      titles: initialTitles,
+      activeTitleIds: [],
+    });
+    setViewRadius(8);
+    setSelectedTile(null);
+    setSelectedVillage(null);
+    setEvents([
+      { id: eventIdRef.current++, message: '¡Partida reiniciada! Buena suerte.', type: 'info', tick: 0 },
+    ]);
+    setNotification('🔄 Partida reiniciada');
+    setTimeout(() => setNotification(null), 2000);
+  }, []);
 
   // Camera movement with keyboard ONLY
   useEffect(() => {
@@ -578,6 +615,14 @@ function App() {
             🗺️ Fronteras
           </button>
 
+          {/* Options Button */}
+          <button
+            onClick={() => setShowOptionsPanel(true)}
+            className="absolute top-3 right-3 bg-gray-700/80 hover:bg-gray-600/90 rounded-lg px-3 py-1.5 border border-gray-500/30 backdrop-blur-sm transition-all text-sm font-bold text-gray-300 flex items-center gap-1.5"
+          >
+            ⚙️ Opciones
+          </button>
+
           {/* Controls hint */}
           <div className="absolute bottom-3 left-3 bg-gray-900/80 rounded-lg px-3 py-2 text-xs text-gray-400 border border-gray-700/50 backdrop-blur-sm">
             <p>🎮 WASD/Flechas = Mover cámara</p>
@@ -623,6 +668,14 @@ function App() {
         <VillageInfoPanel
           village={selectedVillage}
           onClose={() => setSelectedVillage(null)}
+        />
+      )}
+
+      {/* Options Panel */}
+      {showOptionsPanel && (
+        <OptionsPanel
+          onClose={() => setShowOptionsPanel(false)}
+          onReset={handleResetGame}
         />
       )}
     </div>
